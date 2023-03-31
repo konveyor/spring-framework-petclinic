@@ -30,8 +30,6 @@
  */
 package org.springframework.samples.petclinic.config;
 
-import net.sf.ehcache.CacheManager;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.ehcache.EhCacheCacheManager;
@@ -41,14 +39,24 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.EnableMBeanExport;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.samples.petclinic.util.CallMonitoringAspect;
+
+import net.sf.ehcache.CacheManager;
 
 @Configuration
 @EnableCaching // enables scanning for @Cacheable annotation
 @EnableMBeanExport
 @EnableAspectJAutoProxy
 public class ToolsConfig {
+	
+	@Bean
+	@Description("Conversion Service for list handling on configuration loading")
+	public ConversionService conversionService() {
+	    return new DefaultConversionService();
+	}
 	
 	@Bean
     @Description("Call monitoring aspect that monitors call count and call invocation time")
