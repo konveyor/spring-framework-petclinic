@@ -2,6 +2,9 @@ package org.springframework.samples.petclinic.config;
 
 import java.util.List;
 
+import javax.servlet.ServletContext;
+import javax.servlet.SessionCookieConfig;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +18,8 @@ import org.springframework.session.hazelcast.Hazelcast4PrincipalNameExtractor;
 import org.springframework.session.hazelcast.HazelcastSessionSerializer;
 import org.springframework.session.hazelcast.config.annotation.SpringSessionHazelcastInstance;
 import org.springframework.session.hazelcast.config.annotation.web.http.EnableHazelcastHttpSession;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 
 import com.hazelcast.config.AttributeConfig;
 import com.hazelcast.config.Config;
@@ -73,6 +78,26 @@ public class SessionConfiguration {
         joinConfig.getTcpIpConfig().setEnabled(true).setMembers(members);
 
         return Hazelcast.newHazelcastInstance(config);
+    }
+    
+    
+    // Workaround for https://github.com/spring-projects/spring-session/issues/1040 and https://github.com/spring-projects/spring-framework/issues/22319
+    @Bean
+    public CookieSerializer cookieSerializer(ServletContext ctx) {
+        DefaultCookieSerializer cs = new DefaultCookieSerializer();
+
+        try {
+            SessionCookieConfig cfg = ctx.getSessionCookieConfig();
+            cs.setCookieName(cfg.getName());
+            cs.setDomainName(cfg.getDomain());
+            cs.setCookiePath(cfg.getPath());
+            cs.setCookieMaxAge(cfg.getMaxAge());
+        } catch (UnsupportedOperationException e) {
+            cs.setCookieName("MY_SESSIONID");
+            cs.setCookiePath(ctx.getContextPath());
+        }
+
+        return cs;
     }
 
 }
