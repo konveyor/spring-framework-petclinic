@@ -32,13 +32,13 @@ import com.hazelcast.core.HazelcastInstance;
 
 @Configuration
 @EnableHazelcastHttpSession
-@PropertySource("classpath:session/session.properties")
+//@PropertySource("classpath:session/session.properties")
 public class SessionConfiguration {
 	private final String SESSIONS_MAP_NAME = "spring-session-map-name";
 
     
-	@Value("${session.members}")
-	private List<String> members;
+//	@Value("${session.members}")
+//	private List<String> members;
 	
 	@Bean
     public SessionRepositoryCustomizer<Hazelcast4IndexedSessionRepository> customize() {
@@ -75,7 +75,11 @@ public class SessionConfiguration {
         JoinConfig joinConfig = config.getNetworkConfig().getJoin();
         
         joinConfig.getMulticastConfig().setEnabled(false);
-        joinConfig.getTcpIpConfig().setEnabled(true).setMembers(members);
+       // joinConfig.getTcpIpConfig().setEnabled(true).setMembers(members);
+        joinConfig.getTcpIpConfig().setEnabled(false);
+        joinConfig.getKubernetesConfig().setEnabled(true)
+        						.setProperty("namespace", "petclinic")
+        						.setProperty("service-name", "hz-service");
 
         return Hazelcast.newHazelcastInstance(config);
     }

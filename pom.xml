@@ -55,7 +55,7 @@
 
 		<!-- Session Management -->
 		<spring-session.version>2021.0.2</spring-session.version>
-		<hazelcast.version>4.2.2</hazelcast.version>
+		<!--<hazelcast.version>4.2.2</hazelcast.version>-->
 		
 		<!-- Logging -->
 		<slf4j.version>1.7.32</slf4j.version>
@@ -215,8 +215,10 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>${hazelcast.version}</version>
+			<version>5.1.5</version>
 		</dependency>
+		
+
 		
 		<!-- Logging with SLF4J & LogBack -->
 		<dependency>
