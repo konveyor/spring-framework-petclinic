@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.SessionCookieConfig;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -29,12 +30,16 @@ import com.hazelcast.config.JoinConfig;
 import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.session.HazelcastSessionManager;
+
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 
 @Configuration
 @EnableHazelcastHttpSession
 @PropertySource("classpath:session/session.properties")
 public class SessionConfiguration {
-	private final String SESSIONS_MAP_NAME = "spring-session-map-name";
+	private final String SESSIONS_MAP_NAME = "spring-session-cluster-map";
 
     
 	@Value("${session.members}")
@@ -55,6 +60,7 @@ public class SessionConfiguration {
     public HazelcastInstance hazelcastInstance() {
         Config config = new Config();
         config.setClusterName("spring-session-cluster");
+        config.setInstanceName("spring-session-cluster");
 
         // Add this attribute to be able to query sessions by their PRINCIPAL_NAME_ATTRIBUTE's
         AttributeConfig attributeConfig = new AttributeConfig()
@@ -76,28 +82,38 @@ public class SessionConfiguration {
         
         joinConfig.getMulticastConfig().setEnabled(false);
         joinConfig.getTcpIpConfig().setEnabled(true).setMembers(members);
-
+        
         return Hazelcast.newHazelcastInstance(config);
     }
-    
-    
+	/*
+	 * @Bean public WebServerFactoryCustomizer<TomcatServletWebServerFactory>
+	 * customizeTomcat(HazelcastInstance hazelcastInstance) { return (factory) -> {
+	 * factory.addContextCustomizers(context -> { HazelcastSessionManager manager =
+	 * new HazelcastSessionManager(); manager.setSticky(false);
+	 * manager.setHazelcastInstanceName("spring-session-cluster");
+	 * context.setManager(manager); }); };
+	 * 
+	 * 
+	 * }
+	 */
     // Workaround for https://github.com/spring-projects/spring-session/issues/1040 and https://github.com/spring-projects/spring-framework/issues/22319
-    @Bean
-    public CookieSerializer cookieSerializer(ServletContext ctx) {
-        DefaultCookieSerializer cs = new DefaultCookieSerializer();
+	
+	@Bean
+	public CookieSerializer cookieSerializer(ServletContext ctx) {
+		DefaultCookieSerializer cs = new DefaultCookieSerializer();
 
-        try {
-            SessionCookieConfig cfg = ctx.getSessionCookieConfig();
-            cs.setCookieName(cfg.getName());
-            cs.setDomainName(cfg.getDomain());
-            cs.setCookiePath(cfg.getPath());
-            cs.setCookieMaxAge(cfg.getMaxAge());
-        } catch (UnsupportedOperationException e) {
-            cs.setCookieName("MY_SESSIONID");
-            cs.setCookiePath(ctx.getContextPath());
-        }
+		try {
+			SessionCookieConfig cfg = ctx.getSessionCookieConfig();
+			cs.setCookieName(cfg.getName());
+			cs.setDomainName(cfg.getDomain());
+			cs.setCookiePath(cfg.getPath());
+			cs.setCookieMaxAge(cfg.getMaxAge());
+		} catch (UnsupportedOperationException e) {
+			cs.setCookieName("MY_SESSIONID");
+			cs.setCookiePath(ctx.getContextPath());
+		}
 
-        return cs;
-    }
-
+		return cs;
+	}
+	 
 }
