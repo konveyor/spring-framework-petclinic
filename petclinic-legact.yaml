@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: petclinic-legacy
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petclinic-legacy
+  namespace: petclinic-legacy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: petclinic-legacy
+  template:
+    metadata:
+      labels:
+        app: petclinic-legacy
+    spec:
+      containers:
+      - name: petclinic-legacy
+        image: quay.io/sraghuna/petclinic:legacy
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: petclinic-legacy
+  namespace: petclinic-legacy
+spec:
+  selector:
+    app: petclinic-legacy
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  name: petclinic-legacy
+  namespace: petclinic-legacy
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: petclinic-legacy
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
