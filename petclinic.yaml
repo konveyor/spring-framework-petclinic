@@ -57,4 +57,18 @@ spec:
               number: 8080
         path: /
         pathType: Prefix
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hz-service
+  namespace: petclinic-kube
+spec:
+  ports:
+  - name: hazelcast
+    port: 5701
+    protocol: TCP
+  selector:
+    app: petclinic-kube
+  sessionAffinity: None
+  type: ClusterIP
